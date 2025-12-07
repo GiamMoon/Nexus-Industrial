@@ -1,0 +1,47 @@
+version: '3.9'
+
+services:
+  # --- CEREBRO (BACKEND) ---
+  backend:
+    build: ./backend
+    container_name: nexus_core
+    restart: always
+    ports:
+      - "8000:8000"
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - ./backend/src:/app/src # Hot-reload activo
+
+  # --- BASE DE DATOS (Con Soporte Vectorial para IA) ---
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: nexus_db
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER:-nexus}
+      POSTGRES_PASSWORD: ${DB_PASS:-admin123}
+      POSTGRES_DB: nexus_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - nexus_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nexus -d nexus_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # --- SISTEMA DE COLAS & CACHÉ ---
+  redis:
+    image: redis:alpine
+    container_name: nexus_queue
+    ports:
+      - "6379:6379"
+
+volumes:
+  nexus_data:
