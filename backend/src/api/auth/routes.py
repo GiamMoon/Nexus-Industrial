@@ -10,42 +10,78 @@ auth_router = APIRouter(prefix="/auth", tags=["Seguridad & Acceso"])
 # --- 1. LOGIN EMPLEADOS (Nexus Control) ---
 @auth_router.post("/login/control", response_model=TokenSchema)
 def login_empleado(credentials: LoginSchema, db: Session = Depends(get_db)):
-    """Acceso exclusivo para Staff (Admins, Vendedores, Almacén)"""
+    """
+    Acceso exclusivo para Staff. 
+    NOTA: Espera JSON Body: {"email": "...", "password": "..."}
+    """
+    # --- LOGS DE DIAGNÓSTICO (Borrar en producción) ---
+    print(f"\n🔐 INTENTO LOGIN CONTROL")
+    print(f"📨 Recibido Email: '{credentials.email}'")
+    # No imprimimos la password real por seguridad, solo su longitud o primer caracter
+    print(f"🔑 Recibido Pass: '{credentials.password}' (Longitud: {len(credentials.password)})")
+
+    # 1. Buscar Usuario
     user = db.query(UsuarioModel).filter(UsuarioModel.email == credentials.email).first()
     
-    if not user or not verify_password(credentials.password, user.password_hash):
+    if not user:
+        print(f"❌ FALLO: Usuario '{credentials.email}' NO existe en BD.")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Credenciales de empleado incorrectas"
+            detail="Credenciales de empleado incorrectas (Email no encontrado)"
         )
     
+    # 2. Verificar Password
+    es_valido = verify_password(credentials.password, user.password_hash)
+    
+    if not es_valido:
+        print(f"❌ FALLO: Password incorrecta para '{credentials.email}'.")
+        # Comparación visual en consola para debug (Hash vs Input)
+        print(f"   Hash DB: {user.password_hash[:10]}...")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Credenciales de empleado incorrectas (Password erróneo)"
+        )
+    
+    # 3. Verificar Estado
     if not user.activo:
+        print(f"❌ FALLO: Usuario inactivo.")
         raise HTTPException(status_code=403, detail="Usuario desactivado por Admin")
 
-    token = create_access_token(subject=user.id, user_type="employee", role=user.rol)
+    # 4. Normalizar Rol (IMPORTANTE para evitar error de mayúsculas)
+    # Convertimos a mayúsculas y string para que el Token sea consistente
+    rol_token = str(user.rol).upper() if user.rol else "EMPLEADO"
+    print(f"✅ LOGIN OK. Generando token con ROL: {rol_token}")
+
+    token = create_access_token(
+        subject=str(user.id),  # Asegurar que sea String
+        user_type="employee", 
+        role=rol_token
+    )
     
     return {
         "access_token": token,
         "user_name": user.nombre,
-        "role": user.rol
+        "role": rol_token
     }
 
 # --- 2. LOGIN CLIENTES (Nexus Market) ---
 @auth_router.post("/login/market", response_model=TokenSchema)
 def login_cliente(credentials: LoginSchema, db: Session = Depends(get_db)):
     """Acceso público para Compradores"""
+    print(f"\n🛒 INTENTO LOGIN MARKET: {credentials.email}")
+    
     client = db.query(ClienteModel).filter(ClienteModel.email == credentials.email).first()
     
     if not client:
-        # Por seguridad, no decimos si el email existe o no, solo "credenciales inválidas"
-        # Pero para desarrollo, seremos explícitos.
-        raise HTTPException(status_code=401, detail="Cliente no registrado")
+        print("❌ Cliente no encontrado.")
+        raise HTTPException(status_code=401, detail="Credenciales incorrectas")
 
-    # Si es un cliente migrado sin password (caso hipotético), requeriría reset.
     if not client.password_hash or not verify_password(credentials.password, client.password_hash):
-         raise HTTPException(status_code=401, detail="Contraseña incorrecta")
+         print("❌ Password cliente incorrecta.")
+         raise HTTPException(status_code=401, detail="Credenciales incorrectas")
 
-    token = create_access_token(subject=client.id, user_type="client", role="customer")
+    print("✅ LOGIN MARKET OK")
+    token = create_access_token(subject=str(client.id), user_type="client", role="CUSTOMER")
     
     return {
         "access_token": token,
@@ -56,7 +92,6 @@ def login_cliente(credentials: LoginSchema, db: Session = Depends(get_db)):
 # --- 3. REGISTRO PÚBLICO (Nexus Market) ---
 @auth_router.post("/register/market")
 def registrar_cliente(data: RegisterClienteSchema, db: Session = Depends(get_db)):
-    """Self-service: El cliente se crea su propia cuenta"""
     # Validar duplicados
     if db.query(ClienteModel).filter(ClienteModel.email == data.email).first():
         raise HTTPException(status_code=400, detail="El correo ya está registrado")
@@ -76,4 +111,4 @@ def registrar_cliente(data: RegisterClienteSchema, db: Session = Depends(get_db)
     db.commit()
     db.refresh(new_client)
     
-    return {"msg": "Cuenta creada exitosamente. Ahora inicie sesión."}  
+    return {"msg": "Cuenta creada exitosamente. Ahora inicie sesión."}

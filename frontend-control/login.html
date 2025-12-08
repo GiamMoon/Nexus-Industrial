@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Nexus Control | Acceso Restringido</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #1a1a1a; height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .login-card { background: #2d2d2d; color: white; border: 1px solid #444; border-radius: 10px; padding: 2rem; width: 100%; max-width: 400px; }
+        .form-control { background: #3d3d3d; border: 1px solid #555; color: white; }
+        .form-control:focus { background: #444; color: white; border-color: #0d6efd; }
+    </style>
+</head>
+<body>
+    <div class="login-card shadow-lg">
+        <div class="text-center mb-4">
+            <h3 class="fw-bold text-info">NEXUS CONTROL</h3>
+            <small class="text-white-50">Sistema de Gestión Empresarial v2.0</small>
+        </div>
+        <form id="login-form">
+            <div class="mb-3">
+                <label>ID Empleado / Email</label>
+                <input type="email" id="email" class="form-control" placeholder="admin@nexus.com" required>
+            </div>
+            <div class="mb-4">
+                <label>Contraseña de Red</label>
+                <input type="password" id="password" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-info w-100 fw-bold">ACCEDER AL SISTEMA</button>
+        </form>
+    </div>
+    <script src="js/auth.js"></script>
+</body>
+</html>

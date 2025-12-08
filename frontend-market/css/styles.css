@@ -1,0 +1,42 @@
+body { font-family: 'Segoe UI', system-ui, sans-serif; }
+
+.card-product {
+    border: none;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    background: white;
+    overflow: hidden;
+}
+
+.card-product:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.price-tag {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #2c3e50;
+}
+
+.badge-ia {
+    background: linear-gradient(45deg, #6a11cb, #2575fc);
+    font-size: 0.7rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.img-container {
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+}
+.img-container img {
+    max-height: 180px;
+    max-width: 100%;
+}

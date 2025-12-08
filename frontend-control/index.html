@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Nexus Control</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+    <div class="d-flex" id="wrapper">
+        <div class="bg-dark text-white border-end border-secondary" id="sidebar-wrapper">
+            <div class="sidebar-heading border-bottom border-secondary bg-dark fw-bold text-info p-3">
+                <i class="bi bi-cpu-fill"></i> NEXUS AI
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="index.html" class="list-group-item list-group-item-action list-group-item-dark active"><i class="bi bi-speedometer2 me-2"></i> Dashboard</a>
+                <a href="inventory.html" class="list-group-item list-group-item-action list-group-item-dark"><i class="bi bi-qr-code-scan me-2"></i> Escáner AR</a>
+                <a href="tracking.html" class="list-group-item list-group-item-action list-group-item-dark"><i class="bi bi-geo-alt-fill me-2"></i> Mapa GPS</a>
+                <a href="#" class="list-group-item list-group-item-action list-group-item-dark text-danger" onclick="logout()"><i class="bi bi-power me-2"></i> Salir</a>
+            </div>
+        </div>
+
+        <div id="page-content-wrapper" class="w-100 bg-black text-white position-relative">
+            
+            <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom border-secondary px-4">
+                <button class="btn btn-outline-secondary" id="menu-toggle"><i class="bi bi-list"></i></button>
+                <div class="ms-auto d-flex align-items-center">
+                    <span class="badge bg-danger animate-pulse me-3" id="live-indicator">🔴 LIVE WS</span>
+                    <span class="text-white-50 small" id="user-display">Admin</span>
+                </div>
+            </nav>
+
+            <div class="container-fluid p-4">
+                <div class="row g-4 mb-4">
+                    <div class="col-md-4">
+                        <div class="card bg-dark border-secondary text-white shadow">
+                            <div class="card-body">
+                                <h6 class="text-white-50">Ventas Hoy</h6>
+                                <h2 class="fw-bold text-success" id="kpi-ventas">S/ --</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-dark border-secondary text-white shadow">
+                            <div class="card-body">
+                                <h6 class="text-white-50">Productos Críticos</h6>
+                                <h2 class="fw-bold text-warning" id="kpi-stock">--</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-dark border-secondary text-white shadow">
+                            <div class="card-body">
+                                <h6 class="text-white-50">Ticket Promedio</h6>
+                                <h2 class="fw-bold text-info" id="kpi-ticket">S/ --</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="ai-alert-box" class="alert alert-warning border-warning d-none bg-warning bg-opacity-10 text-warning">
+                    <i class="bi bi-robot"></i> <strong>PREDICCIÓN IA:</strong> <span id="ai-msg">--</span>
+                </div>
+
+                <div class="card bg-dark border-secondary text-white mb-4 shadow">
+                    <div class="card-header border-secondary fw-bold d-flex justify-content-between">
+                        <span><i class="bi bi-graph-up"></i> Flujo de Transacciones</span>
+                        <small class="text-muted">Actualización: <span id="last-update">--:--</span></small>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="liveChart" height="80"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="position-fixed bottom-0 start-50 translate-middle-x mb-4" style="z-index: 100;">
+                <button class="btn btn-info shadow-lg fw-bold rounded-pill px-4 py-2 border border-white" data-bs-toggle="modal" data-bs-target="#actionsModal">
+                    <i class="bi bi-grid-fill me-2"></i> PANEL DE COMANDO
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="modal fade" id="actionsModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark text-white border-secondary shadow-lg">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title text-info fw-bold"><i class="bi bi-terminal-fill"></i> Operaciones Nexus</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="accordion" id="accordionOps">
+                        
+                        <div class="accordion-item bg-dark border-secondary">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed bg-secondary text-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
+                                    <i class="bi bi-box-seam me-2"></i> Nuevo Producto + IA
+                                </button>
+                            </h2>
+                            <div id="collapseOne" class="accordion-collapse collapse" data-bs-parent="#accordionOps">
+                                <div class="accordion-body">
+                                    <form onsubmit="crearProducto(event)">
+                                        <input class="form-control form-control-sm mb-2 bg-dark text-white border-secondary" id="new-name" placeholder="Nombre Producto" required>
+                                        <input class="form-control form-control-sm mb-2 bg-dark text-white border-secondary" id="new-sku" placeholder="SKU Único" required>
+                                        <textarea class="form-control form-control-sm mb-2 bg-dark text-white border-secondary" id="new-desc" placeholder="Descripción Técnica (Se vectorizará)" rows="2" required></textarea>
+                                        <div class="row g-2 mb-2">
+                                            <div class="col"><input type="number" class="form-control form-control-sm bg-dark text-white border-secondary" id="new-price" placeholder="Precio Base" required></div>
+                                            <div class="col"><input type="number" class="form-control form-control-sm bg-dark text-white border-secondary" id="new-stock" placeholder="Stock Ini." required></div>
+                                        </div>
+                                        <button type="submit" class="btn btn-success btn-sm w-100 fw-bold">Guardar & Vectorizar</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item bg-dark border-secondary">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed bg-secondary text-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo">
+                                    <i class="bi bi-file-earmark-pdf me-2"></i> Ingestar Manual (RAG)
+                                </button>
+                            </h2>
+                            <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionOps">
+                                <div class="accordion-body">
+                                    <form onsubmit="subirManual(event)">
+                                        <input class="form-control form-control-sm mb-2 bg-dark text-white border-secondary" id="pdf-prod-id" placeholder="ID del Producto (UUID)" required>
+                                        <input type="file" class="form-control form-control-sm mb-2 bg-dark text-white border-secondary" id="pdf-file" accept="application/pdf" required>
+                                        <button type="submit" class="btn btn-warning btn-sm w-100 fw-bold text-dark">Procesar Vectores</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item bg-dark border-secondary">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed bg-secondary text-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree">
+                                    <i class="bi bi-robot me-2"></i> Agente de Compras
+                                </button>
+                            </h2>
+                            <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordionOps">
+                                <div class="accordion-body">
+                                    <p class="small text-muted mb-2">La IA analizará el stock vs la predicción de demanda y generará una Orden de Compra si es necesario.</p>
+                                    <button type="button" class="btn btn-outline-info btn-sm w-100 fw-bold" onclick="activarAgente()">Ejecutar Análisis</button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>

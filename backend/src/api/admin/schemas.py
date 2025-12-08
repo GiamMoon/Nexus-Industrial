@@ -1,6 +1,5 @@
 from pydantic import BaseModel
 from typing import Optional
-from decimal import Decimal
 
 class ProductoCreateSchema(BaseModel):
     nombre: str
@@ -13,7 +12,7 @@ class ProductoCreateSchema(BaseModel):
 class StockUpdateSchema(BaseModel):
     cantidad: int
     tipo_movimiento: str # 'ENTRADA' o 'SALIDA'
-    motivo: str # 'COMPRA', 'MERMA', 'AJUSTE'
+    motivo: str = "AJUSTE_MANUAL"
 
 class KPIDashboardSchema(BaseModel):
     ventas_hoy: float

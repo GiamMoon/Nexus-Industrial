@@ -5,14 +5,16 @@ from datetime import datetime, date
 
 from src.infrastructure.database import get_db
 from src.infrastructure.models import ProductoModel, VentaModel, UsuarioModel
-from src.api.deps import get_current_employee # <--- EL GUARDIA DE SEGURIDAD
+from src.api.deps import get_current_employee
 from src.services.ai_catalog import AISearchService
 from .schemas import ProductoCreateSchema, KPIDashboardSchema, StockUpdateSchema
 
+# NOTA: El prefijo aquí es "/admin". 
+# Al incluirlo en main con "/api", la ruta final será "/api/admin/dashboard"
 admin_router = APIRouter(
     prefix="/admin", 
     tags=["Nexus Control (ERP)"],
-    dependencies=[Depends(get_current_employee)] # Protección Global para este Router
+    dependencies=[Depends(get_current_employee)]
 )
 
 # --- DASHBOARD & ANALYTICS ---
@@ -31,7 +33,7 @@ def obtener_kpis_tiempo_real(db: Session = Depends(get_db)):
     # 3. Ticket Promedio Histórico
     avg_ticket = db.query(func.avg(VentaModel.total)).scalar() or 0.0
     
-    # 4. Mensaje IA (Simulado por ahora)
+    # 4. Mensaje IA
     mensaje = None
     if bajos_stock > 5:
         mensaje = "⚠️ ALERTA IA: Riesgo de quiebre de stock inminente en 5 productos."
@@ -46,32 +48,22 @@ def obtener_kpis_tiempo_real(db: Session = Depends(get_db)):
 # --- GESTIÓN DE INVENTARIO ---
 
 @admin_router.post("/productos")
-def crear_producto_con_ia(
-    data: ProductoCreateSchema, 
-    db: Session = Depends(get_db)
-):
-    """
-    REQ-ADMIN-02: Crea producto y GENERA VECTOR IA automáticamente.
-    """
-    # 1. Validar SKU único
+def crear_producto_con_ia(data: ProductoCreateSchema, db: Session = Depends(get_db)):
     if db.query(ProductoModel).filter(ProductoModel.sku == data.sku).first():
         raise HTTPException(status_code=400, detail="El SKU ya existe")
 
-    # 2. Generar Vector Semántico (IA)
     ai_service = AISearchService(db)
-    # Concatenamos nombre y descripción para mejor búsqueda
     texto_para_vector = f"{data.nombre} {data.descripcion_tecnica}"
     vector = ai_service._generar_embedding_simulado(texto_para_vector)
 
-    # 3. Guardar en BD
     nuevo_prod = ProductoModel(
         nombre=data.nombre,
         sku=data.sku,
         descripcion=data.descripcion_tecnica,
         precio_base=data.precio_base,
-        precio_dinamico=data.precio_base, # Inicial
+        precio_dinamico=data.precio_base,
         stock=data.stock_inicial,
-        embedding_vector=vector, # <--- CEREBRO INSERTADO
+        embedding_vector=vector,
         imagen_url=data.imagen_url
     )
     
@@ -85,10 +77,8 @@ def crear_producto_con_ia(
 def ajustar_stock_manual(
     producto_id: str, 
     movimiento: StockUpdateSchema,
-    db: Session = Depends(get_db),
-    empleado: UsuarioModel = Depends(get_current_employee)
+    db: Session = Depends(get_db)
 ):
-    """Movimientos de Kardex Manuales"""
     prod = db.query(ProductoModel).get(producto_id)
     if not prod:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
@@ -97,12 +87,8 @@ def ajustar_stock_manual(
         prod.stock += movimiento.cantidad
     elif movimiento.tipo_movimiento == "SALIDA":
         if prod.stock < movimiento.cantidad:
-            raise HTTPException(status_code=400, detail="Stock insuficiente para realizar salida")
+            raise HTTPException(status_code=400, detail="Stock insuficiente")
         prod.stock -= movimiento.cantidad
     
     db.commit()
-    
-    # Aquí podríamos registrar en una tabla 'logs_kardex' con el ID del empleado
-    # print(f"Ajuste realizado por: {empleado.email}")
-    
     return {"msg": "Stock actualizado", "nuevo_stock": prod.stock}

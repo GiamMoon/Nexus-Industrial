@@ -1,29 +1,23 @@
-# --- CORE API ---
 fastapi>=0.109.0
 uvicorn[standard]>=0.27.0
 pydantic>=2.6.0
 pydantic-settings>=2.2.0
-
-# --- DATABASE (Híbrida) ---
+email-validator>=2.1.0
 sqlalchemy>=2.0.25
 psycopg2-binary>=2.9.9
-pgvector>=0.2.5        # CRÍTICO: Para Buscador Semántico y RAG
-alembic>=1.13.1        # Migraciones
-
-# --- INTELIGENCIA ARTIFICIAL ---
-openai>=1.12.0         # LLM (Opcional, podemos usar local)
-scikit-learn>=1.4.0    # Random Forest (Churn Prediction)
+pgvector>=0.2.5
+alembic>=1.13.1
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+redis>=5.0.1
+httpx>=0.27.0
+openai>=1.12.0
+scikit-learn>=1.4.0
 numpy>=1.26.0
 pandas>=2.2.0
-tiktoken>=0.6.0        # Conteo de tokens
-
-# --- UTILIDADES & INTEGRACIONES ---
-python-jose[cryptography]>=3.3.0  # JWT Auth
-passlib[bcrypt]>=1.7.4 # Hashing Password
-httpx>=0.27.0          # Cliente HTTP (SUNAT/WhatsApp)
-pypdf>=3.17.0          # Leer manuales para RAG
-fpdf>=1.7.2            # Generar Facturas PDF
+tiktoken>=0.6.0
+pypdf>=3.17.0
+fpdf>=1.7.2
 python-multipart>=0.0.9
-
-# --- RESILIENCIA ---
-redis>=5.0.1           # Colas y Caché
+Faker>=20.0.0
+websockets>=12.0
