@@ -1,44 +1,38 @@
-const API_URL = "http://localhost:8000"; // Backend Docker
+const API_URL = "http://localhost:8000";
 let carrito = JSON.parse(localStorage.getItem('nexus_cart')) || [];
 let token = localStorage.getItem('nexus_client_token');
 
-// INICIALIZACIÓN
 document.addEventListener('DOMContentLoaded', () => {
     cargarProductos();
     actualizarBadgeCarrito();
     verificarSesion();
 });
 
-// ==========================================
-// 1. CATÁLOGO & BÚSQUEDA (IA)
-// ==========================================
 
 async function cargarProductos(query = "") {
     const grid = document.getElementById('product-grid');
-    // Loader
     grid.innerHTML = '<div class="col-12 text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-2 text-muted">Cargando catálogo inteligente...</p></div>';
 
     try {
-        // NOTA: Agregamos "/api" al path
         const url = query 
             ? `${API_URL}/api/market/productos?q=${encodeURIComponent(query)}`
             : `${API_URL}/api/market/productos`;
 
-        console.log(`🔍 Consultando API: ${url}`); // Debug Log
+        console.log(`🔍 Consultando API: ${url}`);
 
         const res = await fetch(url);
         
         if (!res.ok) {
-            console.error(`❌ Error API ${res.status}:`, await res.text());
+            console.error(`Error API ${res.status}:`, await res.text());
             throw new Error(`Error API: ${res.status}`);
         }
         
         const productos = await res.json();
-        console.log("📦 Productos recibidos:", productos.length); // Debug Log
+        console.log(" Productos recibidos:", productos.length); 
         renderizarGrid(productos);
 
     } catch (error) {
-        console.error("❌ Error en cargarProductos:", error);
+        console.error(" Error en cargarProductos:", error);
         grid.innerHTML = `<div class="alert alert-danger text-center">No se pudo conectar con Nexus Core.<br>Verifica que Docker esté corriendo en el puerto 8000.</div>`;
     }
 }
@@ -53,13 +47,11 @@ function renderizarGrid(productos) {
     }
 
     productos.forEach(p => {
-        // Lógica visual: Precio Dinámico vs Precio Base
         const esOferta = p.precio_venta < p.precio_lista;
         const badgeIA = p.es_oferta_ia 
             ? `<span class="badge bg-primary bg-gradient mb-2"><i class="bi bi-stars"></i> Precio IA</span>` 
             : '';
 
-        // Fallback de imagen si no carga la externa
         const imgError = "this.onerror=null; this.src='https://via.placeholder.com/300x200?text=Sin+Imagen';";
 
         const card = `
@@ -100,7 +92,6 @@ function renderizarGrid(productos) {
     });
 }
 
-// Evento Búsqueda
 const searchInput = document.getElementById('search-input');
 if(searchInput) {
     searchInput.addEventListener('keypress', (e) => {
@@ -113,9 +104,6 @@ function buscarProductos() {
     cargarProductos(query);
 }
 
-// ==========================================
-// 2. CARRITO & CHECKOUT (ASÍNCRONO)
-// ==========================================
 
 function agregarAlCarrito(id, nombre, precio) {
     const item = carrito.find(i => i.id === id);
@@ -126,7 +114,6 @@ function agregarAlCarrito(id, nombre, precio) {
     }
     guardarCarrito();
     
-    // Feedback visual simple
     const badge = document.getElementById('cart-badge');
     badge.classList.add('bg-warning');
     setTimeout(() => badge.classList.remove('bg-warning'), 300);
@@ -168,7 +155,6 @@ function toggleCart() {
         totalSpan.innerText = total.toFixed(2);
     }
 
-    // Abrir Modal con Bootstrap
     const modalEl = document.getElementById('cartModal');
     if(modalEl) {
         const modal = new bootstrap.Modal(modalEl);
@@ -179,7 +165,6 @@ function toggleCart() {
 async function procesarCheckout() {
     if (carrito.length === 0) return alert("❌ El carrito está vacío.");
     if (!token) {
-        // Cerrar modal carrito y abrir login
         const modalCartEl = document.getElementById('cartModal');
         const modalLoginEl = document.getElementById('loginModal');
         
@@ -194,7 +179,6 @@ async function procesarCheckout() {
         return;
     }
 
-    // UI Feedback
     const btn = event.target;
     const originalText = btn.innerHTML;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Conectando con SUNAT...';
@@ -217,23 +201,18 @@ async function procesarCheckout() {
         // ÉXITO
         alert(`✅ ¡COMPRA EXITOSA!\n\n📄 ID Pedido: ${data.venta_id}\n📡 Estado: ${data.status}\n\nLa factura electrónica se ha enviado a la cola de procesamiento.`);
         
-        // Limpiar
         carrito = [];
         guardarCarrito();
         location.reload();
 
     } catch (e) {
-        alert("⛔ Error: " + e.message);
+        alert(" Error: " + e.message);
         btn.innerHTML = originalText;
         btn.disabled = false;
     }
 }
 
-// ==========================================
-// 3. SEGURIDAD (LOGIN & REGISTRO)
-// ==========================================
 
-// Login
 const loginForm = document.getElementById('login-form');
 if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
@@ -258,12 +237,11 @@ if (loginForm) {
             location.reload(); 
 
         } catch (err) {
-            alert("❌ " + err.message);
+            alert( err.message);
         }
     });
 }
 
-// Registro (Nuevo)
 const registerForm = document.getElementById('register-form');
 if (registerForm) {
     registerForm.addEventListener('submit', async (e) => {
@@ -326,9 +304,6 @@ function logout() {
     location.reload();
 }
 
-// ==========================================
-// 4. CHATBOT IA (RAG)
-// ==========================================
 
 function toggleChat() {
     const chat = document.getElementById('chat-window');
@@ -347,7 +322,6 @@ async function enviarPreguntaIA() {
     
     if (!pregunta) return;
 
-    // 1. Mostrar mensaje usuario
     body.innerHTML += `
         <div class="d-flex justify-content-end mb-2">
             <div class="bg-primary text-white p-2 rounded-3" style="max-width: 80%; font-size: 0.9em;">
@@ -357,9 +331,7 @@ async function enviarPreguntaIA() {
     input.value = "";
     body.scrollTop = body.scrollHeight;
 
-    // 2. Llamada a API
     try {
-        // La API espera form-urlencoded
         const formData = new URLSearchParams();
         formData.append('pregunta', pregunta);
 
@@ -372,7 +344,6 @@ async function enviarPreguntaIA() {
         const data = await res.json();
         const respuesta = data.respuesta || "No encontré información relevante en los manuales.";
 
-        // 3. Mostrar respuesta Bot
         body.innerHTML += `
             <div class="d-flex justify-content-start mb-2">
                 <div class="bg-white border p-2 rounded-3 shadow-sm text-dark" style="max-width: 85%; font-size: 0.9em;">

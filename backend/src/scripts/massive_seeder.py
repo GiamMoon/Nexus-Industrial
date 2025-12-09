@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 from faker import Faker
 from decimal import Decimal
 
-# Configuración de rutas para importar módulos del backend
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../'))
 
 from src.infrastructure.database import SessionLocal, engine, Base
@@ -13,26 +12,22 @@ from src.infrastructure.models import UsuarioModel, ClienteModel, ProductoModel,
 from src.core.security import get_password_hash
 from src.services.ai_catalog import AISearchService
 
-# Inicializar Faker (Datos en Español)
-fake = Faker(['es_ES', 'es_MX']) # Mezcla para variedad latina
+fake = Faker(['es_ES', 'es_MX'])
 
 def massive_seed():
     print("🚀 INICIANDO CARGA MASIVA DE DATOS (NEXUS ENTERPRISE)...")
     db = SessionLocal()
     ai_service = AISearchService(db)
 
-    # --- 1. EMPLEADOS (Usuarios Nexus Control) ---
     print("👤 Generando Staff...")
     roles = ['ADMIN', 'VENDEDOR', 'ALMACEN']
     usuarios = []
-    # Creamos 1 Super Admin fijo
     db.add(UsuarioModel(
         nombre="Admin Nexus", 
         email="admin@nexus.com", 
         password_hash=get_password_hash("admin123"), 
         rol="ADMIN"
     ))
-    # 10 Empleados random
     for _ in range(10):
         u = UsuarioModel(
             nombre=fake.name(),
@@ -46,8 +41,7 @@ def massive_seed():
         db.add(u)
     db.commit()
 
-    # --- 2. CLIENTES WEB (Nexus Market) ---
-    print("🌍 Generando 100 Clientes B2B...")
+    print("Generando 100 Clientes B2B...")
     clientes = []
     for _ in range(100):
         c = ClienteModel(
@@ -61,7 +55,6 @@ def massive_seed():
         db.add(c)
     db.commit()
 
-    # --- 3. CATÁLOGO INTELIGENTE (Productos + Vectores) ---
     print("📦 Generando 100 Productos Industriales con IA...")
     categorias = ["Limpieza", "Seguridad", "Maquinaria", "Herramientas", "Químicos"]
     productos = []
@@ -73,7 +66,6 @@ def massive_seed():
         nombre = f"{noun} Industrial {adj} {fake.color_name()}"
         desc = fake.paragraph(nb_sentences=3)
         
-        # Simulación de Embedding (Vector IA)
         vector = ai_service._generar_embedding_simulado(desc)
         
         precio = round(random.uniform(10.0, 500.0), 2)
@@ -84,7 +76,7 @@ def massive_seed():
             descripcion=f"Categoría: {cat}. {desc}",
             precio_base=precio,
             precio_dinamico=precio,
-            stock=random.randint(0, 200), # Algunos con 0 para probar alertas
+            stock=random.randint(0, 200),
             embedding_vector=vector,
             imagen_url=f"https://placehold.co/400x300?text={nombre.split()[0]}"
         )
@@ -92,28 +84,24 @@ def massive_seed():
         db.add(p)
     db.commit()
 
-    # --- 4. HISTORIAL DE VENTAS (Transacciones) ---
-    print("💰 Generando 150 Ventas Históricas (Dashboard)...")
+    print(" Generando 150 Ventas Históricas (Dashboard)...")
     estados = ["PAGADO", "PENDIENTE_PAGO", "FACTURADO_SUNAT", "ENVIADO"]
     
     for _ in range(150):
-        # Fecha aleatoria en los últimos 30 días
         fecha_venta = datetime.now() - timedelta(days=random.randint(0, 30), hours=random.randint(0, 23))
         cliente = random.choice(clientes)
         vendedor = random.choice(usuarios)
         
-        # Crear Venta
         venta = VentaModel(
             fecha=fecha_venta,
             cliente_id=cliente.id,
             vendedor_id=vendedor.id,
             estado=random.choice(estados),
-            total=0 # Se calcula abajo
+            total=0 
         )
         db.add(venta)
         db.flush()
         
-        # Agregar Items (1 a 5 productos por venta)
         total_venta = 0
         num_items = random.randint(1, 5)
         for _ in range(num_items):
@@ -134,14 +122,13 @@ def massive_seed():
         
         venta.total = total_venta
         
-        # Simular datos SUNAT si está facturado
         if venta.estado == "FACTURADO_SUNAT":
             venta.xml_generado = "<xml>Simulado</xml>"
             venta.cdr_sunat = f"CDR-{venta.id}"
             venta.hash_firma = fake.sha256()
 
     db.commit()
-    print("✅ ¡SEMBRADO MASIVO COMPLETADO EXITOSAMENTE!")
+    print("¡SEMBRADO MASIVO COMPLETADO EXITOSAMENTE!")
     print(f"   - 11 Empleados")
     print(f"   - 100 Clientes")
     print(f"   - 100 Productos Vectorizados")

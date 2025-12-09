@@ -1,7 +1,6 @@
 version: '3.9'
 
 services:
-  # --- CEREBRO (BACKEND API) ---
   backend:
     build: ./backend
     container_name: nexus_core
@@ -15,10 +14,8 @@ services:
       redis:
         condition: service_started
     volumes:
-      - ./backend/src:/app/src # Hot-reload activo
+      - ./backend/src:/app/src
 
-  # --- WORKER DE FACTURACIÓN (2do Plano) ---
-  # Este servicio corre el script sunat_worker.py en paralelo
   sunat_worker:
     build: ./backend
     container_name: nexus_worker
@@ -33,7 +30,6 @@ services:
     volumes:
       - ./backend/src:/app/src
 
-  # --- BASE DE DATOS (Con Soporte Vectorial para IA) ---
   db:
     image: pgvector/pgvector:pg16
     container_name: nexus_db
@@ -52,7 +48,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # --- SISTEMA DE COLAS & CACHÉ ---
   redis:
     image: redis:alpine
     container_name: nexus_queue

@@ -9,7 +9,6 @@ from src.services.agents import PurchasingAgent
 
 ai_router = APIRouter(prefix="/ai", tags=["Inteligencia Artificial"])
 
-# --- 1. CHATBOT HÍBRIDO (Público) ---
 @ai_router.post("/chat")
 def chatear_con_manuales(
     pregunta: str = Form(...), 
@@ -21,7 +20,6 @@ def chatear_con_manuales(
     try:
         pregunta_lower = pregunta.lower()
         
-        # A. INTENCIÓN: PRECIO / STOCK (SQL)
         intentos_compra = ["precio", "cuesta", "vale", "cuanto", "stock", "tienes"]
         
         if any(x in pregunta_lower for x in intentos_compra):
@@ -30,7 +28,6 @@ def chatear_con_manuales(
             if not palabras:
                 return {"respuesta": "🤖 Para darte precios, necesito saber el nombre del producto."}
             
-            # Buscar coincidencia
             for palabra in palabras:
                 producto = db.query(ProductoModel).filter(
                     ProductoModel.nombre.ilike(f"%{palabra}%")
@@ -44,7 +41,6 @@ def chatear_con_manuales(
             
             return {"respuesta": "🤖 No encontré ese producto exacto en el inventario."}
 
-        # B. INTENCIÓN: TÉCNICA (RAG)
         rag = RAGService() 
         respuesta_rag = rag.consultar(pregunta)
         return {"respuesta": respuesta_rag}
@@ -54,7 +50,6 @@ def chatear_con_manuales(
         return {"respuesta": "Lo siento, mis circuitos están en mantenimiento."}
 
 
-# --- 2. INGESTA DE MANUALES (Solo Admin) ---
 @ai_router.post("/ingestar-pdf")
 async def subir_manual(
     producto_id: str = Form(...),
@@ -70,7 +65,6 @@ async def subir_manual(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# --- 3. AGENTE DE COMPRAS (Solo Admin) ---
 @ai_router.post("/agente-compras/{producto_id}")
 def invocar_agente_compras(
     producto_id: str,

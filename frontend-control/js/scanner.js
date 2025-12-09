@@ -1,4 +1,3 @@
-// Configuración
 const API_URL = "http://localhost:8000";
 const token = localStorage.getItem('nexus_admin_token');
 let html5QrcodeScanner;
@@ -9,12 +8,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function iniciarEscaner() {
-    // Usamos la librería html5-qrcode (cargada en el HTML)
     html5QrcodeScanner = new Html5Qrcode("reader");
     
     const config = { fps: 10, qrbox: { width: 250, height: 250 } };
     
-    // Preferir cámara trasera (environment)
     html5QrcodeScanner.start(
         { facingMode: "environment" }, 
         config, 
@@ -27,16 +24,12 @@ function iniciarEscaner() {
     });
 }
 
-// Sonido "Beep" profesional
 const beep = new Audio('https://www.soundjay.com/buttons/beep-01a.mp3');
 
 async function onScanSuccess(decodedText, decodedResult) {
-    // 1. Pausar escáner
     html5QrcodeScanner.pause();
     beep.play();
 
-    // 2. Buscar Producto en Backend
-    // (En prod buscaríamos por SKU exacto, aquí usamos el buscador inteligente)
     try {
         const res = await fetch(`${API_URL}/api/market/productos?q=${encodeURIComponent(decodedText)}`);
         const productos = await res.json();
@@ -58,22 +51,18 @@ function onScanFailure(error) {
     // No hacer nada, sigue intentando leer
 }
 
-// --- UI REALIDAD AUMENTADA (Overlay) ---
 function mostrarOverlay(producto) {
     productoActualId = producto.id;
     
-    // Rellenar datos
     document.getElementById('ar-nombre').innerText = producto.nombre;
     document.getElementById('ar-sku').innerText = producto.sku;
     document.getElementById('ar-stock').innerText = producto.stock_disponible;
     
-    // Mostrar tarjeta flotante
     const overlay = document.getElementById('ar-overlay');
     overlay.classList.remove('d-none');
-    overlay.classList.add('animate-pop'); // Animación CSS (opcional)
+    overlay.classList.add('animate-pop');
 }
 
-// --- AJUSTE DE KARDEX ---
 async function ajustarStock(cantidad) {
     if (!productoActualId) return;
 
@@ -98,10 +87,8 @@ async function ajustarStock(cantidad) {
 
         const data = await res.json();
         
-        // Actualizar visualmente
         document.getElementById('ar-stock').innerText = data.nuevo_stock;
         
-        // Feedback visual
         const btn = event.target;
         const originalText = btn.innerText;
         btn.innerText = "✅";
@@ -112,7 +99,6 @@ async function ajustarStock(cantidad) {
     }
 }
 
-// Botón para cerrar la ficha y seguir escaneando
 function cerrarOverlay() {
     document.getElementById('ar-overlay').classList.add('d-none');
     html5QrcodeScanner.resume();

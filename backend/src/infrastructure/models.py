@@ -7,7 +7,6 @@ from datetime import datetime
 
 from .database import Base
 
-# --- 1. MODELOS DE ACCESO ---
 
 class UsuarioModel(Base):
     """Tablpython -m http.server 3000a para empleados (Nexus Control)"""
@@ -20,7 +19,6 @@ class UsuarioModel(Base):
     rol = Column(String, default="VENDEDOR") 
     activo = Column(Boolean, default=True)
     
-    # Tracking GPS (REQ-ADMIN-04)
     ultima_latitud = Column(Numeric(20, 15), nullable=True)
     ultima_longitud = Column(Numeric(20, 15), nullable=True)
     ultima_actualizacion_gps = Column(DateTime, nullable=True)
@@ -38,7 +36,6 @@ class ClienteModel(Base):
     
     ventas = relationship("VentaModel", back_populates="cliente")
 
-# --- 2. MODELOS DE NEGOCIO ---
 
 class ProductoModel(Base):
     __tablename__ = "productos"
@@ -48,7 +45,6 @@ class ProductoModel(Base):
     nombre = Column(String, index=True)
     descripcion = Column(Text)
     
-    # --- CEREBRO IA ---
     embedding_vector = Column(Vector(1536)) 
     
     precio_base = Column(Numeric(10, 2))
@@ -70,7 +66,6 @@ class VentaModel(Base):
     estado = Column(String, default="PENDIENTE_PAGO")
     total = Column(Numeric(10, 2), default=0.0)
     
-    # Datos SUNAT
     xml_generado = Column(Text, nullable=True)
     cdr_sunat = Column(Text, nullable=True)
     hash_firma = Column(String, nullable=True)
@@ -86,7 +81,6 @@ class DetalleVentaModel(Base):
     precio_unitario = Column(Numeric(10, 2))
     subtotal = Column(Numeric(10, 2))
 
-# --- 3. NUEVOS MODELOS (LOS QUE FALTABAN) ---
 
 class RutaVendedorModel(Base):
     __tablename__ = "rutas_vendedores"

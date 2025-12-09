@@ -4,12 +4,10 @@ from jose import jwt
 from passlib.context import CryptContext
 import os
 
-# CONFIGURACIÓN (En prod, esto viene de .env)
-SECRET_KEY = os.getenv("SECRET_KEY", "CLAVE_ULTRA_SECRETA_NEXUS_50K")
+SECRET_KEY = os.getenv("SECRET_KEY", "CLAVE_ULTRA_SECRETA_JHIRE")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 # 24 horas
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
 
-# Contexto de Hashing (Bcrypt)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:

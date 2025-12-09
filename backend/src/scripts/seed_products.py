@@ -1,6 +1,5 @@
 import sys
 import os
-# Hack para importar módulos hermanos
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../'))
 
 from src.infrastructure.database import SessionLocal, engine, Base
@@ -9,7 +8,7 @@ from src.services.ai_catalog import AISearchService
 import random
 
 def seed_products():
-    print("🌱 Sembrando Catálogo Industrial...")
+    print("Sembrando Catálogo Industrial...")
     db = SessionLocal()
     ai_service = AISearchService(db)
     
@@ -27,7 +26,6 @@ def seed_products():
     ]
 
     for nombre, desc, precio in productos_dummy:
-        # Generar vector simulado basado en la descripción
         vector = ai_service._generar_embedding_simulado(desc)
         
         prod = ProductoModel(
@@ -35,15 +33,15 @@ def seed_products():
             sku=f"SKU-{random.randint(1000,9999)}",
             descripcion=desc,
             precio_base=precio,
-            precio_dinamico=precio, # Inicial igual
-            stock=random.randint(5, 100), # Random para probar precios dinámicos
+            precio_dinamico=precio,
+            stock=random.randint(5, 100), 
             embedding_vector=vector,
             imagen_url=f"https://placehold.co/600x400?text={nombre.replace(' ', '+')}"
         )
         db.add(prod)
     
     db.commit()
-    print("✅ 10 Productos con Vectores IA insertados.")
+    print("10 Productos con Vectores IA insertados.")
     db.close()
 
 if __name__ == "__main__":

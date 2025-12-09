@@ -26,10 +26,8 @@ if (loginForm) {
     });
 }
 
-// --- GUARD LOGIC ---
 function checkAuth() {
     const token = localStorage.getItem('nexus_admin_token');
-    // Si no hay token y no estamos en login, fuera
     if (!token && !window.location.href.includes('login.html')) {
         window.location.href = "login.html";
     }
@@ -40,5 +38,4 @@ function logout() {
     window.location.href = "login.html";
 }
 
-// Ejecutar validación al cargar
 checkAuth();

@@ -9,10 +9,9 @@ class ProductoCardSchema(BaseModel):
     descripcion: str
     imagen_url: Optional[str] = "https://via.placeholder.com/300"
     
-    # Precios
-    precio_lista: float # Precio tachado (Base)
-    precio_venta: float # Precio IA (Dinámico)
-    es_oferta_ia: bool  # Para poner etiqueta "⚡ Precio Smart"
+    precio_lista: float
+    precio_venta: float 
+    es_oferta_ia: bool 
     
     stock_disponible: int
     

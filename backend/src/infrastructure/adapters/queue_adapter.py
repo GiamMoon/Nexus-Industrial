@@ -4,7 +4,6 @@ import os
 
 class QueueAdapter:
     def __init__(self):
-        # Conexión al contenedor 'redis' definido en docker-compose
         self.client = redis.Redis(
             host=os.getenv("REDIS_HOST", "redis"),
             port=6379,
@@ -21,7 +20,6 @@ class QueueAdapter:
 
     def obtener_tarea(self):
         """Consumer: Saca una tarea de la cola (Bloqueante)"""
-        # blpop espera hasta que haya algo en la lista
         tarea = self.client.blpop(self.QUEUE_NAME, timeout=5)
         if tarea:
             return json.loads(tarea[1])

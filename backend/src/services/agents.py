@@ -17,17 +17,13 @@ class PurchasingAgent:
         producto = self.db.query(ProductoModel).get(producto_id)
         if not producto: return {"status": "error", "msg": "Producto no encontrado"}
         
-        # 1. PREDICCIÓN DE DEMANDA (Algoritmo Simplificado)
-        # En producción: Scikit-learn LinearRegression con histórico de ventas
-        demanda_proyectada = random.randint(20, 100) # Mockup inteligente
+        demanda_proyectada = random.randint(20, 100) 
         stock_seguridad = 10
         umbral_reorden = demanda_proyectada + stock_seguridad
         
-        # 2. TOMA DE DECISIÓN
         if producto.stock < umbral_reorden:
-            cantidad_a_comprar = umbral_reorden - producto.stock + 50 # Buffer
+            cantidad_a_comprar = umbral_reorden - producto.stock + 50 
             
-            # 3. ACCIÓN: Generar Orden de Compra
             pdf_path = PDFGenerator.generar_orden_compra(
                 producto.nombre, 
                 cantidad_a_comprar, 

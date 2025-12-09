@@ -9,34 +9,27 @@ from src.api.deps import get_current_employee
 from src.services.ai_catalog import AISearchService
 from .schemas import ProductoCreateSchema, KPIDashboardSchema, StockUpdateSchema
 
-# NOTA: El prefijo aquí es "/admin". 
-# Al incluirlo en main con "/api", la ruta final será "/api/admin/dashboard"
 admin_router = APIRouter(
     prefix="/admin", 
     tags=["Nexus Control (ERP)"],
     dependencies=[Depends(get_current_employee)]
 )
 
-# --- DASHBOARD & ANALYTICS ---
 
 @admin_router.get("/dashboard", response_model=KPIDashboardSchema)
 def obtener_kpis_tiempo_real(db: Session = Depends(get_db)):
     """REQ-ADMIN-01: Datos para el Dashboard Vivo"""
     
-    # 1. Ventas de Hoy
     total_hoy = db.query(func.sum(VentaModel.total))\
         .filter(func.date(VentaModel.fecha) == date.today()).scalar() or 0.0
     
-    # 2. Productos Críticos (Stock < 10)
     bajos_stock = db.query(ProductoModel).filter(ProductoModel.stock < 10).count()
     
-    # 3. Ticket Promedio Histórico
     avg_ticket = db.query(func.avg(VentaModel.total)).scalar() or 0.0
     
-    # 4. Mensaje IA
     mensaje = None
     if bajos_stock > 5:
-        mensaje = "⚠️ ALERTA IA: Riesgo de quiebre de stock inminente en 5 productos."
+        mensaje = "ALERTA IA: Riesgo de quiebre de stock inminente en 5 productos."
 
     return {
         "ventas_hoy": float(total_hoy),
@@ -45,7 +38,6 @@ def obtener_kpis_tiempo_real(db: Session = Depends(get_db)):
         "alerta_ia": mensaje
     }
 
-# --- GESTIÓN DE INVENTARIO ---
 
 @admin_router.post("/productos")
 def crear_producto_con_ia(data: ProductoCreateSchema, db: Session = Depends(get_db)):

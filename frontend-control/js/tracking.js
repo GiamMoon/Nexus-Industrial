@@ -3,21 +3,16 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initMap() {
-    // 1. Inicializar Mapa (Centrado en Lima, Perú)
     const map = L.map('map').setView([-12.0464, -77.0428], 13);
 
-    // 2. Capa Oscura (Estilo Enterprise)
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
         subdomains: 'abcd',
         maxZoom: 20
     }).addTo(map);
 
-    // 3. Obtener Datos (Simulación de Fetch a API Backend)
-    // En producción: const res = await fetch('/api/admin/vendedores/ubicacion');
     const vendedores = generarDatosSimulados();
 
-    // 4. Dibujar Marcadores
     vendedores.forEach(v => {
         const icono = L.divIcon({
             className: 'custom-div-icon',
@@ -28,7 +23,6 @@ function initMap() {
 
         const marker = L.marker([v.lat, v.lng], { icon: icono }).addTo(map);
         
-        // Popup con info del vendedor
         marker.bindPopup(`
             <div class="text-center">
                 <strong>${v.nombre}</strong><br>
@@ -40,8 +34,7 @@ function initMap() {
 }
 
 function generarDatosSimulados() {
-    // Estos datos simulan la respuesta de la API basándose en lo que el Seeder creó
-    // Lat/Lon alrededor de Lima
+
     return [
         { nombre: "Juan Pérez", lat: -12.046, lng: -77.042 },
         { nombre: "Maria Lopez", lat: -12.050, lng: -77.030 },
